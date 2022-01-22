@@ -1,0 +1,13 @@
+{
+  "properties": [
+    {
+      "name": "amazon.aws.accesskey",
+      "type": "java.lang.String",
+      "description": "Description for amazon.aws.accesskey."
+    },
+    {
+      "name": "amazon.aws.secretkey",
+      "type": "java.lang.String",
+      "description": "Description for amazon.aws.secretkey."
+    }
+  ] }

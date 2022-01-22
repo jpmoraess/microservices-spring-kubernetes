@@ -1,0 +1,62 @@
+server:
+  port: 8081
+
+app:
+  topic: transaction
+  returnTopic: transaction_extorno
+
+limite:
+  valorTotal: 20000
+
+spring:
+  application:
+    name: limite-svc
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        temp:
+          use_jdbc_metadata_defaults: false
+    hibernate:
+      hibernate.ddl-auto: update
+      generate-ddl: true
+      show-sql: true
+  datasource:
+      driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: password
+
+  kafka:
+    consumer:
+      group-id: limite-group
+      key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit:  true
+
+    properties:
+      isolation:
+        level: read_committed
+  cache:
+    expireAfterWrite: 30
+    maximumSize: 1024
+    allowNullValues: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  sleuth:
+    sampler:
+      probability: 1.0
+    enabled: false
+
+management:
+  metrics:
+    enable:
+      root: true
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics
+
+

@@ -1,0 +1,77 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		maven {
+			url "https://plugins.gradle.org/m2/"
+		}
+	}
+	dependencies {
+		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.3"
+
+	}
+}
+
+plugins {
+	id 'org.springframework.boot' version '2.5.3'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+	id 'idea'
+	id "org.sonarqube" version "2.8"
+	id 'jacoco'
+
+}
+jacocoTestReport {
+	reports {
+		xml.enabled true
+		csv.enabled false
+		html.destination file("${buildDir}/jacocoHtml")
+	}
+}
+test {
+	useJUnitPlatform()
+}
+
+test.finalizedBy jacocoTestReport
+
+
+group = 'br.com.coffeeandit'
+sourceCompatibility = '1.11'
+
+repositories {
+	mavenCentral()
+	maven { url 'https://repo.spring.io/snapshot' }
+	maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local/' }
+
+	maven { url 'https://repo.spring.io/milestone' }
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation group: 'com.github.derjust', name: 'spring-data-dynamodb', version: '5.1.0'
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.12.47'
+
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth', version: '3.0.3'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-sleuth-zipkin', version: '3.0.3'
+
+	implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.14.1'
+	implementation group: 'org.springframework', name: 'spring-aspects', version: '5.3.9'
+	implementation('org.springframework.boot:spring-boot-starter-webflux')
+	implementation ('org.springframework.kafka:spring-kafka')
+
+
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+	testImplementation 'io.projectreactor:reactor-test'
+
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-webflux-ui', version: '1.5.10'
+
+
+	annotationProcessor 'org.projectlombok:lombok:1.18.20'
+	compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.20'
+}
+
+test {
+	useJUnitPlatform()
+}

@@ -1,0 +1,13 @@
+apiVersion: "authentication.istio.io/v1alpha1"
+kind: "Policy"
+metadata:
+  name: "jwt"
+spec:
+  targets:
+  - name: transaction-bff
+  origins:
+  - jwt:
+      issuer: "http://34.71.73.122:8080/auth/realms/master"
+      jwksUri: "http://34.71.73.122:8080/auth/realms/master/protocol/openid-connect/certs"
+  principalBinding: USE_ORIGIN
+

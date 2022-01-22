@@ -1,0 +1,68 @@
+server:
+  port: 8081
+
+app:
+  topic: transaction
+  returnTopic: transaction_extorno
+
+limite:
+  valorTotal: 20000
+
+spring:
+  application:
+    name: limite-svc
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL94Dialect
+        temp:
+          use_jdbc_metadata_defaults: false
+    hibernate:
+      hibernate.ddl-auto: update
+      generate-ddl: true
+      show-sql: true
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: limite-svc-2
+      key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit:  true
+      #properties:
+        #security:
+         # protocol: SASL_PLAINTEXT
+        #sasl:
+          #mechanism: PLAIN
+          #jaas:
+          # config: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="jzPNJp85";
+      max-poll-records: 1
+
+
+  cache:
+    expireAfterWrite: 30
+    maximumSize: 1024
+    allowNullValues: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  zipkin:
+    base-url: http://localhost:9411
+  sleuth:
+    sampler:
+      probability: 1.0
+    enabled: true
+
+management:
+  metrics:
+    enable:
+      root: true
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics

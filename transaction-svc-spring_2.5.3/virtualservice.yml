@@ -1,0 +1,45 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: transaction-svc
+spec:
+  hosts:
+    - transaction-svc
+  http:
+    - route:
+        - destination:
+            host: transaction-svc
+            subset: v1
+          weight: 80
+        - destination:
+            host: transaction-svc-v2
+            subset: v2
+          weight: 20
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: transaction-svc
+spec:
+  host: transaction-svc
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+      tcp:
+        maxConnections: 200
+        connectTimeout: 200ms
+      outlierDetection:
+      baseEjectionTime: 180.000s
+      consecutiveErrors: 1
+      interval: 1.000s
+      maxEjectionPercent: 100

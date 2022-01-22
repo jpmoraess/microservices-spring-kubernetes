@@ -1,0 +1,3 @@
+CREATE SEQUENCE limite_diario_seq
+INCREMENT 1
+START 50;

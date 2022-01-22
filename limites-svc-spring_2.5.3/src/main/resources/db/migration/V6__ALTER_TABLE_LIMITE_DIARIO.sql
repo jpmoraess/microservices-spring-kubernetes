@@ -1,0 +1,1 @@
+alter table limite_diario add column data_lancamento date;

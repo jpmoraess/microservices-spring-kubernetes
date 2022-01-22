@@ -1,0 +1,59 @@
+server:
+  port: 8083
+
+amazon:
+  aws:
+    accesskey: QUtJQUlCN1lQWVRIQkJLTzdWNUE=
+    secretkey: T1R6UER6ZW1UOTZzbmNJK3NSS3d0NzIzVHZrV2ZhT1RtcDVGL3E5OQ==
+
+
+management:
+  metrics:
+    enable:
+      root: true
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics
+spring:
+  application:
+    name: transaction-svc
+  kafka:
+    bootstrap-servers: 35.223.152.223:9092
+    consumer:
+      group-id: transaction-svc
+      key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit:  false
+    listener:
+      missing-topics-fatal: false
+      ack-mode: MANUAL_IMMEDIATE
+  zipkin:
+    base-url: http://10.73.1.18:9411
+  sleuth:
+    sampler:
+      probability: 1.0
+    enabled: true
+
+
+app:
+  topic: transaction
+  returnTopic: transaction_extorno
+  timeout: 5
+  cacheTime: 15
+  intervalTransaction: 6
+
+
+alert:
+  url: "aHR0cHM6Ly9ob29rcy5zbGFjay5jb20vc2VydmljZXMvVENLTVQ0N1UxL0JRR1JTR1IzMi82Q3B4OFlZYmJqdktLcWxwQ1kzRFlxTkc="
+  #imagem: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3SQ6d6N4lPB7rv_BysMJ5q_vGYCHVCY0fgR1y98p4fWlrA_5Rmw"
+  imagem: "https://media.giphy.com/media/l1KsOBPB2dWNPcikM/giphy.gif"
+  imagem2: "https://pbs.twimg.com/profile_images/1397462844/Yoda_fighting_stance_400x400.jpg"
+  intervalTransaction: 6
+realtime-stream:
+  message: Notificação de transação financeira.
+  author: Deutsche Bank S.A
+
+transaction:
+  riskValue: 300

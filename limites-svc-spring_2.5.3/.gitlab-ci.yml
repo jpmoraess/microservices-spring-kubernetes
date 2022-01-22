@@ -1,0 +1,94 @@
+stages:
+  - build
+#   - test
+  - flyway
+  - docker-build
+  - deploy
+
+variables:
+
+  PROJECT: coffeeandit
+  SERVICE_NAME: limite-svc
+  CONTAINER_IMAGE: ${CI_REGISTRY}/${CI_PROJECT_PATH}:${CI_BUILD_REF_NAME}_${CI_BUILD_REF}
+  CONTAINER_IMAGE_LATEST: ${CI_REGISTRY}/${CI_PROJECT_PATH}:latest
+
+  DOCKER_REGISTRY: "registry.hub.docker.com"
+  DOCKER_IMAGE: $DOCKER_REGISTRY/$PROJECT/$SERVICE_NAME
+
+  DOCKER_DRIVER: overlay2
+  PRODUCTION_NAMESPACE: istio-system
+  
+  SERVER: coffeeandit
+
+package:
+  stage: build
+  image: gradle:jdk11
+  tags:
+    - cluster
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+    - gradle assemble
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+  artifacts:
+    paths:
+      - build/libs/*.jar
+    expire_in: 1 hour
+
+flyway:
+  stage: build
+  image: gradle:jdk11
+  tags:
+    - cluster
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+    - gradle flywayMigrate
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+  artifacts:
+    paths:
+      - build/libs/*.jar
+    expire_in: 1 hour
+
+# test:
+#   stage: test
+#   image: gradle:jdk11
+#   tags:
+#     - cluster
+#   before_script:
+#     - export GRADLE_USER_HOME=`pwd`/.gradle
+#   script:
+#     - ./gradlew check
+#   cache:
+#     paths:
+#       - .gradle/wrapper
+#       - .gradle/caches
+
+docker:
+  stage: docker-build
+  image: docker:latest
+  services:
+    - name: docker:dind
+      entrypoint: ["dockerd-entrypoint.sh"]
+  tags:
+    - docker
+  script:
+    - docker build -t ${DOCKER_IMAGE}:$(cat gradle.properties | grep "$version" | cut -d'=' -f2) .
+    - docker tag ${DOCKER_IMAGE}:$(cat gradle.properties | grep "$version" | cut -d'=' -f2) ${DOCKER_IMAGE}:latest
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${DOCKER_REGISTRY}
+    - docker push ${DOCKER_IMAGE}:$(cat gradle.properties | grep "$version" | cut -d'=' -f2)
+    - docker push ${DOCKER_IMAGE}:latest
+
+# Deployment step
+deploy:
+  stage: deploy
+  tags:
+    - runner-coffeeandit
+  script:
+    - kubectl --record deployment.apps/${SERVICE_NAME} set image deployment.v1.apps/${SERVICE_NAME} ${SERVICE_NAME}=${CI_REGISTRY_USER}/${SERVICE_NAME}:$(cat gradle.properties | grep "$version" | cut -d'=' -f2) -n istio-system --kubeconfig=/home/gitlab-runner/.kube/config.bkp

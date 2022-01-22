@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-bff
+  labels:
+    app: transaction-bff
+    service: transaction-bff
+spec:
+  ports:
+    - port: 8082
+      name: http
+  selector:
+    app: transaction-bff
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-transaction-bff
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-bff
+  labels:
+    app: transaction-bff
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingParams:
+      updatePeriodSeconds: 1
+      intervalSeconds: 1
+      timeoutSeconds: 120
+      maxSurge: "20%"
+      maxUnavailable: "10%"
+      pre: {}
+      post: {}
+  selector:
+    matchLabels:
+      app: transaction-bff
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: transaction-bff
+        version: v1
+    spec:
+      serviceAccountName: sa-transaction-bff
+      containers:
+        - name: transaction-bff
+          image: coffeeandit/transaction-bff:0.4.5-SNAPSHOT
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: transaction-bff
+                  key: password
+          resources:
+            requests:
+              memory: "300Mi"
+              cpu: "300m"
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8082
+          readinessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /actuator/health
+              port: 8082
+              scheme: HTTP
+            initialDelaySeconds: 120
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /actuator/health
+              port: 8082
+              scheme: HTTP
+            initialDelaySeconds: 100
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+  triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - transaction-bff
+        from:
+          kind: Image
+          name: coffeeandit/transaction-bff:0.4.5-SNAPSHOT
+          namespace: workshop
+      type: ImageChange
+    - type: ConfigChange

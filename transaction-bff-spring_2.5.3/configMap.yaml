@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: transaction-bff
+data:
+  application.properties: |-
+    spring.kafka.bootstrap-servers=35.223.152.223:9092
+    spring.security.oauth2.resourceserver.jwt.issuer-uri=https://keycloak.coffeeandit.com.br/auth/realms/master
+    spring.redis.host=35.238.120.251
+    spring.redis.port=6379
+    spring.zipkin.base-url=http://10.73.1.18:9411
+    app.urlTransaction=http://transaction-svc:8083/v1/transactions/block?agencia=%d&conta=%d
+    app.urlTransactionById=http://transaction-svc:8083/v1/transactions/%s
+    spring.security.oauth2.resourceserver.jwt.issuer-uri=http://35.223.152.223:8080/auth/realms/master

@@ -1,0 +1,85 @@
+buildscript {
+    ext {
+        springBootVersion = '2.5.3'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.3"
+
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'idea'
+apply plugin: 'jacoco'
+
+apply plugin: "org.sonarqube"
+
+
+
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'br.com.coffeeandit'
+sourceCompatibility = 11
+targetCompatibility = 11
+
+repositories {
+    mavenCentral()
+    maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local/' }
+
+}
+test {
+    useJUnitPlatform()
+}
+bootRun {
+    systemProperty "spring.profiles.active", "dev"
+}
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
+tasks.register("coffeeandit") {
+    doLast {
+        print 'Olá aluno '
+        println propCoffee
+        println rootProject
+    }
+}
+dependencies {
+    implementation('org.springframework.boot:spring-boot-starter-webflux')
+    implementation('org.springframework.boot:spring-boot-starter-cache')
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: '2.5.3'
+    implementation 'org.springframework.security:spring-security-oauth2-resource-server'
+    implementation group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.5.1.RELEASE'
+    implementation group: 'com.auth0', name: 'java-jwt', version: '3.10.0'
+    implementation('org.springframework.boot:spring-boot-starter-data-redis')
+    implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth', version: '3.0.3'
+    implementation group: 'org.springframework.cloud', name: 'spring-cloud-sleuth-zipkin', version: '3.0.3'
+    implementation ('org.springframework.kafka:spring-kafka')
+    implementation group: 'org.springdoc', name: 'springdoc-openapi-webflux-ui', version: '1.5.10'
+
+
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.9.8'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+
+  ///  compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-kubernetes-all', version: '1.1.10.RELEASE'
+
+
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.20'
+
+}

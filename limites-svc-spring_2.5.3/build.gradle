@@ -1,0 +1,49 @@
+plugins {
+	id 'org.springframework.boot' version '2.5.3'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+	id 'idea'
+	id "org.flywaydb.flyway" version "6.3.3"
+}
+
+group = 'br.com.coffeeandit'
+sourceCompatibility = '1.11'
+sourceCompatibility = '1.11'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation 'org.projectlombok:lombok:1.18.20'
+	annotationProcessor 'org.projectlombok:lombok:1.18.20'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation group: 'com.google.guava', name: 'guava', version: '23.0'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth', version: '3.0.3'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-sleuth-zipkin', version: '3.0.3'
+	implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.23'
+	implementation('org.flywaydb:flyway-core')
+	implementation ('org.springframework.kafka:spring-kafka')
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+	testImplementation group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '2.7.6'
+
+}
+
+test {
+	useJUnitPlatform()
+}
+
+flyway {
+	url = 'jdbc:postgresql://35.206.91.130:5432/limites'
+	user =  'keycloak'
+	password = 'password'
+}
+
+build.dependsOn(flywayMigrate)
+bootRun.dependsOn(build)
+

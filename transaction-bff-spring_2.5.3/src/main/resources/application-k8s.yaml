@@ -1,0 +1,63 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: transaction-bff
+  cloud:
+    kubernetes:
+      config:
+        enabled: true
+        name: transaction-bff
+        namespace: istio-system
+      reload:
+        enabled: true
+        mode: polling
+        period: 2000
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
+      client-id: transaction-producer-local
+      transaction-id-prefix: ted
+      properties:
+        enable:
+          idempotence: true
+        transactional:
+          id: ted
+  redis:
+    password: ${REDIS_PASSWORD}
+    time-to-live: 10000
+
+  sleuth:
+    sampler:
+      probability: 1.0
+    enabled: true
+
+  cache:
+    expireAfterWrite: 1
+    maximumSize: 1024
+    allowNullValues: false
+    type: redis
+
+  jackson:
+    serialization:
+      write_dates_as_timestamps: false
+app:
+  topic: transaction
+  timeout: 5
+  retries: 3
+
+
+logging:
+  level:
+    root: INFO
+
+management:
+  metrics:
+    enable:
+      root: true
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics

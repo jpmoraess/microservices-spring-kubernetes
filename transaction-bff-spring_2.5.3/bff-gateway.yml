@@ -1,0 +1,40 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  annotations: 
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  name: bff-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: httsp
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: bff
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - bff-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    - uri:
+        prefix: /actuator/health
+    - uri:
+        prefix: /swagger-ui.html
+    route:
+    - destination:
+        port:
+          number: 8082
+        host: transaction-bff
+

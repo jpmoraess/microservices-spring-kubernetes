@@ -1,0 +1,88 @@
+include: 'https://gitlab.com/channelcoffeeandit/template-git/-/raw/master/template.yml'
+stages:
+  - build
+  - test
+  - docker-build
+  - deploy
+
+variables:
+
+  SERVICE_NAME: transaction-bff
+
+package:
+  stage: build
+  image: gradle:jdk11
+  tags:
+    - runner-coffeeandit
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+    - gradle assemble
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+  artifacts:
+    paths:
+      - build/*
+    expire_in: 1 hour
+
+tests:
+  stage: test
+  image: gradle:jdk11
+  tags:
+    - runner-coffeeandit
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+    - gradle check jacocoTestReport
+    - mkdir public
+    - cp -Rf build/* public/
+#    - gradle sonarqube -Dsonar.qualitygate.wait=true -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.analysis.mode=publish
+
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+  artifacts:
+    paths:
+      - build/*
+      - public
+    expire_in: 1 hour
+  only:
+    - merge_requests
+    - master
+
+pages:
+  stage: deploy
+  image: busybox
+  script:
+    - echo "Copying public content"
+  artifacts:
+    paths:
+      - public
+  only:
+    - master
+
+docker:
+  stage: docker-build
+  image: docker:latest
+  services:
+    - name: docker:dind
+      entrypoint: ["dockerd-entrypoint.sh"]
+  tags:
+    - docker
+  script:
+    - docker build -t ${DOCKER_IMAGE}:$(cat gradle.properties | grep "$version" | cut -d'=' -f2) .
+    - docker tag ${DOCKER_IMAGE}:$(cat gradle.properties | grep "$version" | cut -d'=' -f2) ${DOCKER_IMAGE}:latest
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${DOCKER_REGISTRY}
+    - docker push ${DOCKER_IMAGE}:$(cat gradle.properties | grep "$version" | cut -d'=' -f2)
+    - docker push ${DOCKER_IMAGE}:latest
+
+# Deployment step
+deploy:
+  stage: deploy
+  tags:
+    - runner-coffeeandit
+  script:
+    - kubectl --record deployment.apps/${SERVICE_NAME} set image deployment.v1.apps/${SERVICE_NAME} ${SERVICE_NAME}=${CI_REGISTRY_USER}/${SERVICE_NAME}:$(cat gradle.properties | grep "$version" | cut -d'=' -f2) -n istio-system --kubeconfig=/home/gitlab-runner/.kube/config.bkp

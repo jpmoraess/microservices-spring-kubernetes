@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-svc
+  labels:
+    app: transaction-svc
+    service: transaction-svc
+spec:
+  ports:
+    - port: 8083
+      name: http
+  selector:
+    app: transaction-svc
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-transaction-svc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-svc
+  labels:
+    app: transaction-svc
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: transaction-svc
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: transaction-svc
+        version: v1
+    spec:
+      serviceAccountName: sa-transaction-svc
+      containers:
+        - name: transaction-svc
+          image: coffeeandit/transaction-svc:0.6.0-SNAPSHOT
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8083
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-svc-v2
+  labels:
+    app: transaction-svc
+    version: v2
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: transaction-svc
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: transaction-svc
+        version: v1
+    spec:
+      serviceAccountName: sa-transaction-svc
+      containers:
+        - name: transaction-svc
+          image: coffeeandit/transaction-svc:0.6.0-SNAPSHOT
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+          readinessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /actuator/health
+              port: 8083
+              scheme: HTTP
+            initialDelaySeconds: 80
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /actuator/health
+              port: 8083
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5

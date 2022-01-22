@@ -1,0 +1,3 @@
+CREATE SEQUENCE hibernate_sequence
+INCREMENT 1
+START 50;
